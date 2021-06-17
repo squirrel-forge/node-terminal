@@ -1,0 +1,35 @@
+{
+  "name": "@squirrel-forge/node-terminal",
+  "version": "1.0.0",
+  "description": "A node commandline abstraction, application wrapper and commands",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "ntdemo": "bin/cli"
+  },
+  "files": [
+    "bin",
+    "demo",
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/squirrel-forge/node-terminal.git"
+  },
+  "keywords": [],
+  "author": "Daniel Hartwell <me@siux.info> (http://siux.info)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/squirrel-forge/node-terminal/issues"
+  },
+  "homepage": "https://github.com/squirrel-forge/node-terminal#readme",
+  "dependencies": {
+    "@squirrel-forge/node-cfx": "^1.0.2",
+    "@squirrel-forge/node-objection": "^1.0.0",
+    "cli-spinner": "^0.2.10",
+    "intercept-stdout": "^0.1.2",
+    "ucfirst": "^1.0.0"
+  }
+}
