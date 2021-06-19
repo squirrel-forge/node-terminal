@@ -105,14 +105,16 @@ class Command extends Terminal {
     /**
      * Validate command execution
      *
-     * @return {boolean} - True if command should be executed
+     * @return {Promise<boolean>} - True if command should be executed
      */
     before() {
-        if ( this._flag_describe ) {
-            this.describe();
-            return false;
-        }
-        return true;
+        return new Promise( ( resolve ) => {
+            if ( this._flag_describe ) {
+                this.describe();
+                resolve( false );
+            }
+            resolve( true );
+        } );
     }
 
     /**
@@ -125,7 +127,7 @@ class Command extends Terminal {
      * @return {void}
      */
     fire( done ) {
-        throw Error( cfx.setStyle( '[bred][fwhite]  Command class must include a valid "fire" method  [re]' ) );
+        throw Error( cfx.setStyle( '[bred][fwhite]  Command class must implement an async "fire" method  [re]' ) );
     }
 
 }

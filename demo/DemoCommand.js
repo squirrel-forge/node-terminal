@@ -32,24 +32,22 @@ class DemoCommand extends Command {
     /**
      * Fire command
      *
-     * @param {Function} done - Complete callback
-     *
-     * @return {void}
+     * @return {Promise<void>}
      */
-    fire( done ) {
-        const timeout = this.arg( 0 ) || 2000;
-        this.progressStart( ' warming up...' );
-        setTimeout( () => {
+    fire() {
+        return new Promise( async ( resolve ) => {
+            const timeout = this.arg( 0 ) || 2000;
+            this.progressStart( ' warming up...' );
+            await this.wait( timeout );
             this.progressStop();
             cfx.info( ' Please enter your name:' );
-            this.prompt( data => {
-                this.erase();
-                this.erase();
-                cfx.log( ' I suppose [fcyan]' + data.trim() + '[re] is the smart one?' );
-                cfx.success( 'Go build your own command now!' );
-                done();
-            } );
-        }, timeout );
+            const data = await this.prompt();
+            this.erase();
+            this.erase();
+            cfx.log( ' I suppose [fcyan]' + data.trim() + '[re] is the smart one?' );
+            cfx.success( 'Go build your own command now!' );
+            resolve();
+        } );
     }
 
 }

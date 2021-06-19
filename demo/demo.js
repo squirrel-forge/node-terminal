@@ -12,7 +12,7 @@ const DemoCommand = require( './DemoCommand' );
  *
  * @return {void}
  */
-function demo() {
+async function demo() {
 
     /**
      * Initialize application
@@ -27,7 +27,7 @@ function demo() {
     /**
      * Run application
      */
-    app.run();
+    await app.run();
 }
 
 /**

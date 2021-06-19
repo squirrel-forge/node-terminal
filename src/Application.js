@@ -138,12 +138,6 @@ class Application extends Terminal {
      * @return {void}
      */
     register( CMD_Class ) {
-        /* Instance check does not work with different packages
-        const testCMD = new CMD_Class( this );
-        if ( !( testCMD instanceof Command ) ) {
-            throw Error( cfx.setStyle( '[bred][fwhite]  Command constructor must inherit from the Command class.  [re]' ) );
-        }
-        */
         if ( typeof CMD_Class !== 'function' ) {
             throw Error( cfx.setStyle( '[bred][fwhite]  Command must be a constructor and inherit from the Command class.  [re]' ) );
         }
@@ -200,9 +194,11 @@ class Application extends Terminal {
     /**
      * Run application
      *
-     * @return {void}
+     * @param {boolean} xit - Exit after completion
+     *
+     * @return {Promise<void>}
      */
-    run() {
+    async run( xit = true ) {
 
         // Break on not found
         const CMD_Class = this.commandExists();
@@ -238,19 +234,17 @@ class Application extends Terminal {
         }
 
         // Precheck command execution
-        if ( cmd.before() ) {
+        if ( await cmd.before() === true ) {
 
             // Fire the command
-            cmd.fire( () => {
+            await cmd.fire();
 
-                // Show completion
-                if ( cmd._flag_verbose ) {
-                    cfx.log( '' );
-                    cfx.success( 'Command ' + this._command + ' completed in ' + this.timer.end( 'application-run-verbose' ) );
-                    cfx.log( '' );
-                }
-                cmd.exit();
-            } );
+            // Show completion
+            if ( cmd._flag_verbose ) {
+                cfx.log( '' );
+                cfx.success( 'Command ' + this._command + ' completed in ' + this.timer.end( 'application-run-verbose' ) );
+                cfx.log( '' );
+            }
         } else {
 
             // Show completion
@@ -259,6 +253,11 @@ class Application extends Terminal {
                 cfx.success( 'Precheck ' + this._command + ' completed in ' + this.timer.end( 'application-run-verbose' ) );
                 cfx.log( '' );
             }
+        }
+
+        // End application process
+        if ( xit ) {
+            this.exit( cmd._flag_verbose );
         }
     }
 }

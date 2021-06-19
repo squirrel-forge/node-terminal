@@ -181,16 +181,25 @@ class Terminal {
     }
 
     /**
+     * Async wait via timeout
+     */
+    wait( timeout ) {
+        return new Promise( ( resolve ) => {
+            setTimeout( resolve, timeout );
+        } );
+    }
+
+    /**
      * Start prompting the user
      *
-     * @param {Function} callback -  Input result callback
      * @param {boolean} once - Only get input once, default: true
      *
-     * @return {void}
+     * @return {Promise<string>}
      */
-    prompt( callback, once ) {
-        once = once !== false;
-        this.stdin[ once ? 'once' : 'on' ]( 'data', callback );
+    prompt( once = true ) {
+        return new Promise( ( resolve ) => {
+            this.stdin[ once ? 'once' : 'on' ]( 'data', resolve );
+        } );
     }
 
     /**
