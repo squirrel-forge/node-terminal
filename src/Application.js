@@ -191,6 +191,22 @@ class Application extends Terminal {
         return CMD_Class
     }
 
+    getArgDesc( index, args ) {
+        if ( args[ index ] && args[ index ][ 2 ] ) {
+            return args[ index ][ 2 ];
+        }
+        return null;
+    }
+
+    getFlagDesc( flag, flags ) {
+        for ( let i = 0; i < flags.length; i++ ) {
+            if ( flags[ i ][ 0 ] === flag || flags[ i ][ 1 ] === flag ) {
+                return flags[ i ][ 2 ];
+            }
+        }
+        return null;
+    }
+
     /**
      * Run application
      *
@@ -218,16 +234,16 @@ class Application extends Terminal {
             // Arguments
             if ( this._args.length ) {
                 cfx.log( '\n With arguments:' );
-                for ( var i = 0; i < this._args.length; i++ ) {
-                    cfx.log( '  [fgreen]' + i + '[re] : ' + this._args[ i ] );
+                for ( let i = 0; i < this._args.length; i++ ) {
+                    cfx.log( '  [fgreen]' + this._args[ i ] + '[re] ' + this.getArgDesc( i, cmd._options.args ) );
                 }
             }
 
             // Flags
             if ( this._flags.length ) {
                 cfx.log( '\n With flags:' );
-                for ( var j = 0; j < this._flags.length; j++ ) {
-                    cfx.log( '  [fgreen]' + this._flags[ j ] + '[re]' );
+                for ( let i = 0; i < this._flags.length; i++ ) {
+                    cfx.log( '  [fgreen]' + this._flags[ i ] + '[re] ' + this.getFlagDesc( this._flags[ i ], cmd._options.flags ) );
                 }
             }
             cfx.log( '' );
