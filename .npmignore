@@ -20,4 +20,6 @@ $RECYCLE.BIN/
 # Much credit to http://gitignore.io
 
 ### Internal ###
-node_modules/
+
+### NPM only ###
+.github
