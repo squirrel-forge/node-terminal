@@ -1,62 +1,100 @@
-/* global require, module, process */
-'use strict';
-
 /**
  * Requires
  */
-const ucfirst = require('ucfirst');
+const ucfirst = require( 'ucfirst' );
 const objm = require( '@squirrel-forge/node-objection' );
 const cfx = require( '@squirrel-forge/node-cfx' ).cfx;
-const Terminal = require( './Terminal' );
-const Command = require( './Command' );
+const Exception = require( '@squirrel-forge/node-util' ).Exception;
+const CliInput = require( '@squirrel-forge/node-util' ).CliInput;
+const Timer = require( '@squirrel-forge/node-util' ).Timer;
+const Progress = require( '@squirrel-forge/node-util' ).Progress;
 const HelpCommand = require( './HelpCommand' );
+const path = require( 'path' );
+
+/**
+ * @typedef {Object} ApplicationOptions
+ */
+
+/**
+ * Application exception
+ * @class
+ */
+class ApplicationException extends Exception {}
 
 /**
  * Application class
- *
+ * @class
  * @abstract
  */
-class Application extends Terminal {
+class Application {
 
     /**
      * Constructor
-     *
-     * @param {null|Object} options - Options object
+     * @constructor
+     * @param {null|Object} options - Options object, default: null
      * @param {boolean} init - Initialize application, default: true
      */
-    constructor( options, init ) {
-        init = init !== false;
+    constructor( options = null, init = true ) {
 
-        // Call super constructor
-        super();
-        this.timer.start( 'application-construct' );
+        /**
+         * Timer
+         * @public
+         * @type {Timer}
+         */
+        this.timer = new Timer();
 
-        // Default options
+        /**
+         * Default options
+         * @public
+         * @type {ApplicationOptions}
+         */
         this._defaults = {
             name : 'Application',
-            cwd : process.cwd(),
+            description : '',
+            self : path.resolve( __dirname, '../../' ),
+
+            // cwd : process.cwd(),
             default : 'help',
-            flags : [
-                [ '-v', '--verbose', 'Enable debug output.' ],
-                [ '-d', '--describe', 'Describe command arguments and flags.' ],
-            ],
+            flags : {
+                _flag_version : [ '-v', '--version', false, true, 'Show application version' ],
+                _flag_verbose : [ '-i', '--verbose', false, true, 'Enable verbose output' ],
+                _flag_describe : [ '-d', '--describe', false, true, 'Describe command arguments, flags and options' ],
+                _flag_help : [ '-h', '--help', false, true, 'Optionally calls the help command' ],
+            },
         };
 
-        // Setup options
-        this._options = objm.cloneObject( this._defaults, true );
+        /**
+         * Options
+         * @public
+         * @type {ApplicationOptions}
+         */
+        this.options = objm.cloneObject( this._defaults, true );
 
         // Apply custom options
-        if ( objm.isPojo( options ) ) {
-            objm.mergeObject( this._options, options, true, true, true, true );
+        if ( options && objm.isPojo( options ) ) {
+            objm.mergeObject( this.options, options, true, true, true, true );
         }
 
-        // Registered commands
+        /**
+         * Registered commands
+         * @protected
+         * @type {Object}
+         */
         this._commands = {};
 
-        // Call information
-        this._command = null;
-        this._args = [];
-        this._flags = [];
+        /**
+         * Input
+         * @public
+         * @type {null|CliInput}
+         */
+        this.input = null;
+
+        /**
+         * Progress display
+         * @public
+         * @type {Progress}
+         */
+        this.progress = new Progress();
 
         // Initialize
         if ( init ) {
@@ -66,21 +104,19 @@ class Application extends Terminal {
 
     /**
      * Initialize application
-     *
-     * @private
-     *
+     * @protected
      * @param {boolean} register - Register defaults commands
-     *
+     * @param {null|Array<string>} args - Arguments, options and flags
      * @return {void}
      */
-    _init( register ) {
-        register = register !== false;
+    _init( register = true, args = null ) {
+        process.stdin.setEncoding( 'utf-8' );
 
-        // Get arguments
-        this._parseInput();
+        // Init input
+        this.input = new CliInput( cfx, args );
 
-        // Set application flags
-        this.setFlagProps( this, this._options.flags, this._flags );
+        // Set application flags and options
+        this.setInputProps( this, this.options.flags );
 
         // Register default commands
         if ( register ) {
@@ -89,146 +125,135 @@ class Application extends Terminal {
     }
 
     /**
-     * Parse arguments
-     *
-     * @param {null|Array} args - Arguments
-     *
-     * @private
-     *
+     * Set all setFlags as properties
+     * @public
+     * @param {Object} target - Target object
+     * @param {{name:['short','long','default',boolean]}} flags - Flags and options source map
      * @return {void}
      */
-    _parseInput( args ) {
-
-        // Default remove the command call itself from the args
-        args = args || process.argv.slice( 2 );
-
-        // No args available
-        if ( !args.length ) {
-
-            // Execute default command
-            if ( this._options.default ) {
-                args = [ this._options.default ];
-            } else {
-                throw new Error( cfx.setStyle( '[bred][fwhite]  No arguments supplied or default command not set.  [re]' ) );
-            }
-        }
-
-        // Set default command if first argument is a flag
-        if ( args[ 0 ] && args[ 0 ].substr( 0, 1 ) === '-' ) {
-            this._command = this._options.default;
-        } else {
-            this._command = args.shift().toLowerCase();
-        }
-
-        // Set args and flags
-        for ( var i = 0; i < args.length; i++ ) {
-            if ( args[ i ][ 0 ] === '-' ) {
-                this._flags.push( args[ i ] );
-            } else {
-                this._args.push( args[ i ] );
-            }
-        }
+    setInputProps( target, flags ) {
+        const options = this.input.getFlagsOptions( flags );
+        Object.assign( target, options );
     }
 
     /**
      * Register command class
-     *
-     * @param {Command} CMD_Class - Command class
-     *
+     * @public
+     * @param {Command} CMD_Class - Command class constructor
      * @return {void}
      */
     register( CMD_Class ) {
         if ( typeof CMD_Class !== 'function' ) {
-            throw Error( cfx.setStyle( '[bred][fwhite]  Command must be a constructor and inherit from the Command class.  [re]' ) );
+            throw new ApplicationException( 'Must be a command constructor not type: ' + typeof CMD_Class );
+        }
+        if ( this._commands[ CMD_Class.name ] ) {
+            throw new ApplicationException( 'Command already exists: ' + CMD_Class.name );
         }
         this._commands[ CMD_Class.name ] = CMD_Class;
     }
 
     /**
-     * Print unknown command message
-     *
-     * @private
-     *
+     * Get valid command name
+     * @public
      * @param {string} cmd_name - Command input name
-     *
-     * @return {void}
+     * @return {null|Function} - Command class or null if not defined
      */
-    _printUnknownCommand( cmd_name ) {
-        cmd_name = cmd_name || this._command;
-        cfx.error( 'Unknown command: ' + cmd_name );
-    }
+    getCommandName( cmd_name ) {
 
-    /**
-     * Command exists
-     *
-     * @param {string} cmd_name - Command input name
-     * @param {boolean} show_error - Show not found error, default: true
-     *
-     * @return {null|string} - Command class name or null if not defined
-     */
-    commandExists( cmd_name, show_error ) {
-        cmd_name = cmd_name || this._command;
-        show_error = show_error !== false;
+        // We have nothing
+        if ( typeof cmd_name !== 'string' || !cmd_name.length ) {
+            return null;
+        }
 
         // Build command classname
         const CMD_Class = ucfirst( cmd_name ) + 'Command';
 
         // Command not found
         if ( !this._commands[ CMD_Class ] ) {
-
-            // Show error
-            if ( show_error ) {
-                if ( this._flag_verbose ) {
-                    throw Error( cfx.setStyle( '[bred][fwhite]  Command "' + cmd_name + '" class[' + CMD_Class + '] not defined.  [re]' ) );
-                } else {
-                    this._printUnknownCommand( cmd_name );
-                }
-            }
             return null;
         }
 
         // Command found
-        return CMD_Class
+        return CMD_Class;
     }
 
-    getArgDesc( index, args ) {
-        if ( args[ index ] && args[ index ][ 2 ] ) {
-            return args[ index ][ 2 ];
-        }
-        return null;
-    }
-
-    getFlagDesc( flag, flags ) {
-        for ( let i = 0; i < flags.length; i++ ) {
-            if ( flags[ i ][ 0 ] === flag || flags[ i ][ 1 ] === flag ) {
-                return flags[ i ][ 2 ];
-            }
-        }
-        return null;
+    /**
+     * Get command instance
+     * @param {string} CMD_Class - Classname
+     * @param {null|Object} options Command options
+     * @return {Command} - Command instance
+     */
+    getCommandInstance( CMD_Class, options = null ) {
+        return new this._commands[ CMD_Class ]( this, options );
     }
 
     /**
      * Run application
-     *
+     * @public
+     * @param {Object} options - Command options
      * @param {boolean} xit - Exit after completion
-     *
-     * @return {Promise<void>}
+     * @return {Promise<void>} - Possibly throws errors
      */
-    async run( xit = true ) {
+    async run( options = null, xit = true ) {
 
-        // Break on not found
-        const CMD_Class = this.commandExists();
-        if ( !CMD_Class ) {
-            this.exit();
+        // Show version
+        if ( this._flag_version ) {
+            let pkg;
+            try {
+                pkg = require( path.join( this.options.self, 'package.json' ) );
+            } catch ( e ) {
+                cfx.error( e );
+                this.exit( 1 );
+            }
+            cfx.log( pkg.name + '@' + pkg.version );
+            if ( this._flag_verbose ) {
+                cfx.info( '- Installed at: ' + this.options.self );
+            }
+            this.exit( 0 );
         }
 
+        // Get input command name and class
+        let command = this.input.arg(), CMD_Class = this.getCommandName( command );
+
+        // Force help command
+        if ( this._flag_help ) {
+            command = 'help';
+            CMD_Class = this.getCommandName( command );
+        }
+
+        // Warn and fallback if not found
+        if ( !CMD_Class ) {
+            cfx.error( this.options.name + ' unknown command: ' + command );
+
+            // Check for similar commands
+            // TODO: check match percent to defined commands and prompt user
+
+            // Check for a default command to run instead
+            if ( this.options.default ) {
+                CMD_Class = this.getCommandName( this.options.default );
+                if ( CMD_Class ) {
+                    command = this.options.default;
+                }
+            }
+
+            // No fallback command found
+            if ( !CMD_Class ) {
+                cfx.error( this.options.name + ' no valid command defined: ' + ( this.options.default || 'null' ) );
+                this.exit( 1 );
+            }
+        }
+
+        // Remove command from input arguments
+        this.input._i.args.shift();
+
         // Create command instance
-        const cmd = new this._commands[ CMD_Class ]( this );
+        const cmd = this.getCommandInstance( CMD_Class, options );
 
         // Notify start and measure time
         if ( cmd._flag_verbose ) {
-
             this.timer.start( 'application-run-verbose' );
+
+            /*
             cfx.success( 'Command ' + this._command + ' running in: ' + this._options.cwd );
 
             // Arguments
@@ -247,35 +272,49 @@ class Application extends Terminal {
                 }
             }
             cfx.log( '' );
+            */
         }
 
         // Precheck command execution
-        if ( await cmd.before() === true ) {
+        const before = await cmd.before();
+        if ( before === true ) {
 
             // Fire the command
             await cmd.fire();
 
             // Show completion
             if ( cmd._flag_verbose ) {
-                cfx.log( '' );
-                cfx.success( 'Command ' + this._command + ' completed in ' + this.timer.end( 'application-run-verbose' ) );
-                cfx.log( '' );
+                cfx.success( this.options.name + ' command ' + command + ' completed in ' + this.timer.end( 'application-run-verbose' ) );
             }
-        } else {
-
-            // Show completion
-            if ( cmd._flag_verbose ) {
-                cfx.log( '' );
-                cfx.success( 'Precheck ' + this._command + ' completed in ' + this.timer.end( 'application-run-verbose' ) );
-                cfx.log( '' );
-            }
+        } else if ( cmd._flag_verbose ) {
+            cfx.success( this.options.name + ' precheck ' + command + ' completed in ' + this.timer.end( 'application-run-verbose' ) );
         }
 
         // End application process
         if ( xit ) {
-            this.exit( cmd._flag_verbose );
+            this.exit( 0 );
         }
+    }
+
+    /**
+     * End process
+     * @param {number} code - Exit code, default: 0
+     * @param {null|boolean} showTime - Show from construction time
+     * @return {void}
+     */
+    exit( code = 0, showTime = null ) {
+        if ( showTime === true || showTime === null && this._flag_verbose ) {
+            cfx.info( this.options.name + ' completed after ' + this.timer.end( 'construct' ) );
+        }
+        process.exit( code );
     }
 }
 
+// Export Exception as static property constructor
+Application.ApplicationException = ApplicationException;
+
+/**
+ * Export
+ * @type {Application}
+ */
 module.exports = Application;

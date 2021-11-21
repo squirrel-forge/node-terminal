@@ -1,6 +1,3 @@
-/* global require, module */
-'use strict';
-
 /**
  * Requires
  */
@@ -9,29 +6,22 @@ const DemoCommand = require( './DemoCommand' );
 
 /**
  * Run demo application
- *
- * @return {void}
+ * @return {Promise<void>} - May throw errors
  */
-async function demo() {
+async function demoApp() {
 
-    /**
-     * Initialize application
-     */
+    // Initialize application
     const app = new DemoApplication();
 
-    /**
-     * Register commands
-     */
+    // Register commands
     app.register( DemoCommand );
 
-    /**
-     * Run application
-     */
+    // Run application
     await app.run();
 }
 
 /**
  * Export
- * @type {demo}
+ * @type {demoApp}
  */
-module.exports = demo;
+module.exports = demoApp;

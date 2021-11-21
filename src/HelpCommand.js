@@ -1,78 +1,66 @@
-/* global require, module */
-'use strict';
-
 /**
  * Requires
  */
 const cfx = require( '@squirrel-forge/node-cfx' ).cfx;
+const callback = require( '@squirrel-forge/node-util' ).callback;
 const Command = require( './Command' );
 
 /**
  * Help command
+ * @class
  */
 class HelpCommand extends Command {
 
     /**
      * Constructor
-     *
+     * @constructor
      * @param {Object} app - Application
-     *
-     * @return {void}
      */
     constructor( app ) {
         super( app, {
             name : 'help',
-            desc : 'Shows a list of all registered commands and some general information.',
+            description : 'Shows a list of all registered commands and some general information.',
         } );
     }
 
     /**
      * Fire command
-     *
-     * @return {Promise<void>}
+     * @public
+     * @return {Promise<void>} - May throw errors
      */
-    fire() {
-        return new Promise( async ( resolve ) => {
-            cfx.success( this._app._options.name + ': Help' );
+    async fire() {
+        cfx.success( this.app.options.name + ': Help' );
+        cfx.log( this.app.options.description );
 
-            // Inject after description
-            const after_head = 'inject_after_head';
-            if ( typeof this[ after_head ] === 'function' ) {
-                this[ after_head ]();
-            }
+        // Inject after description
+        callback( 'help_head', this );
 
-            // Global flags
-            this._printFlags( this._app._options.flags, '\n Global flags:' );
+        // Global flags
+        this._printFlags( this.app.options.flags, 'Global flags:' );
 
-            // Inject after description
-            const after_flags = 'inject_after_flags';
-            if ( typeof this[ after_flags ] === 'function' ) {
-                this[ after_flags ]();
-            }
+        // Inject after description
+        callback( 'help_flags', this );
 
-            // Sorted commands
-            cfx.log( '\n Commands:' );
-            const keys = Object.keys( this._app._commands );
-            keys.sort();
-            var i, cmd;
-            for ( i = 0; i < keys.length; i++ ) {
-                cmd = new this._app._commands[ keys[ i ] ]( this._app );
-                cfx.log( '   [fgreen]' + cmd._options.name + '[re]' +
+        // Sorted commands
+        cfx.warn( 'Commands:' );
+        const keys = Object.keys( this.app._commands );
+        keys.sort();
+        let i, cmd;
+        for ( i = 0; i < keys.length; i++ ) {
+            cmd = new this.app._commands[ keys[ i ] ]( this.app );
+            cfx.log( ' [fgreen]' + cmd.options.name + '[re]' +
                     ( this._flag_verbose ? ' [[fcyan]class[re]][fcyan]' + cmd.constructor.name + '[re]' : '' ) +
-                    ' : ' + cmd._options.desc );
-            }
+                    ' : ' + cmd.options.description );
+        }
 
-            // Inject after description
-            const after_com = 'inject_after_com';
-            if ( typeof this[ after_com ] === 'function' ) {
-                this[ after_com ]();
-            }
-
-            cfx.log( '' );
-            resolve();
-        } );
+        // Inject after description
+        callback( 'help_commands', this );
     }
 
 }
 
+/**
+ * Export
+ * @type {HelpCommand}
+ */
 module.exports = HelpCommand;

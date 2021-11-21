@@ -1,21 +1,20 @@
-/* global require, module */
-'use strict';
-
 /**
  * Requires
  */
 const Application = require( '../src/Application' );
 
 /**
- * Demo application
+ * Demo application class
+ * @class
  */
 class DemoApplication extends Application {
 
     /**
      * Constructor
+     * @constructor
      */
     constructor() {
-        super( { name : 'Demo application' } );
+        super( { name : 'node-terminal demo application' } );
     }
 
 }
