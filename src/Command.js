@@ -76,6 +76,51 @@ class Command {
     }
 
     /**
+     * Get argument data
+     * @public
+     * @param {number} index - Argument index
+     * @return {null|{def: *, name: *, type: *, desc: *}} - Argument info
+     */
+    argData( index ) {
+        if ( this.options.args[ index ] ) {
+            const [ type, name, desc, def ] = this.options.args[ index ];
+            return { name, type, desc, def };
+        }
+        return null;
+    }
+
+    /**
+     * Find flag in list
+     * @protected
+     * @param {string} flag - Flag input
+     * @param {Array} flags - Object entries of flags options
+     * @return {null|{def: *, bool: *, name: *, short: *, long: *, desc: *}} - Flag info
+     */
+    _findFlag( flag, flags ) {
+        for ( let i = 0; i < flags.length; i++ ) {
+            const [ name, data ] = flags[ i ];
+            const [ short, long, def, bool, desc ] = data;
+            if ( short === flag || long === flag ) {
+                return { name, short, long, def, bool, desc };
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get flag data
+     * @param {string} flag - Flag input
+     * @return {null|{def: *, bool: *, name: *, short: *, long: *, desc: *}} - Flag info
+     */
+    flagData( flag ) {
+        let data = this._findFlag( flag, Object.entries( this.app.options.flags ) );
+        if ( !data ) {
+            data = this._findFlag( flag, Object.entries( this.options.flags ) );
+        }
+        return data;
+    }
+
+    /**
      * Convert value to string
      * @param {*} def - Value
      * @return {null|string} - String if converted
