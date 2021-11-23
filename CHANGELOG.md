@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2
+ - Readded verbose command input description output.
+ - Added *Command.argData* and *Command.flagData* methods.
+
 ## 2.0.0
  - Full refactoring with new and updated modules and better dev experience and simpler code.
 
