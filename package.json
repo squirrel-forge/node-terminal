@@ -1,6 +1,6 @@
 {
   "name": "@squirrel-forge/node-terminal",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "A node commandline abstraction, simple cli structure and application wrapper with commands",
   "main": "index.js",
   "scripts": {

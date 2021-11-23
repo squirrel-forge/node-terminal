@@ -253,26 +253,28 @@ class Application {
         if ( cmd._flag_verbose ) {
             this.timer.start( 'application-run-verbose' );
 
-            /*
-            cfx.success( 'Command ' + this._command + ' running in: ' + this._options.cwd );
+            cfx.success( 'Running command ' + command + ' in ' + process.cwd() );
 
             // Arguments
-            if ( this._args.length ) {
-                cfx.log( '\n With arguments:' );
-                for ( let i = 0; i < this._args.length; i++ ) {
-                    cfx.log( '  [fgreen]' + this._args[ i ] + '[re] ' + this.getArgDesc( i, cmd._options.args ) );
+            if ( this.input._i.args.length ) {
+                cfx.log( 'With arguments:' );
+                for ( let i = 0; i < this.input._i.args.length; i++ ) {
+                    const data = cmd.argData( i );
+                    cfx.log( '  [fgreen]' + this.input._i.args[ i ] + '[re] '
+                        + ( data ? data.desc : 'Unknown argument' ) );
                 }
             }
 
             // Flags
-            if ( this._flags.length ) {
-                cfx.log( '\n With flags:' );
-                for ( let i = 0; i < this._flags.length; i++ ) {
-                    cfx.log( '  [fgreen]' + this._flags[ i ] + '[re] ' + this.getFlagDesc( this._flags[ i ], cmd._options.flags ) );
+            if ( this.input._i.flags.length ) {
+                cfx.log( 'With flags:' );
+                for ( let i = 0; i < this.input._i.flags.length; i++ ) {
+                    const flag = this.input._i.flags[ i ];
+                    const data = cmd.flagData( flag );
+                    cfx.log( '  [fgreen]' + flag + '[re] '
+                        + ( data ? data.desc : 'Unknown flag' ) );
                 }
             }
-            cfx.log( '' );
-            */
         }
 
         // Precheck command execution
