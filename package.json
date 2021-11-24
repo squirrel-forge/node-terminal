@@ -34,7 +34,7 @@
   "dependencies": {
     "@squirrel-forge/node-cfx": "^1.0.2",
     "@squirrel-forge/node-objection": "^1.0.0",
-    "@squirrel-forge/node-util": "^0.5.2",
+    "@squirrel-forge/node-util": "^0.5.5",
     "ucfirst": "^1.0.0"
   }
 }
