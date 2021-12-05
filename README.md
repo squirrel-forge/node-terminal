@@ -12,15 +12,33 @@ npm i @squirrel-forge/node-terminal
 ## Usage
 
 ```
-const nt = require( '@squirrel-forge/node-terminal' );
-// nt.Class
+const { Class } = require( '@squirrel-forge/node-terminal' );
 ```
 
 ### Classes
 
- - Application
- - Command
- - HelpCommand
+ - Application( options, init )
+   - timer : Timer
+   - options : Object
+   - input : CliInput
+   - progress : Progress
+   - setInputProps( target, flags )
+   - register ( constructor )
+   - getCommandName( name )
+   - getCommandInstance( constructor, options )
+   - run( options, exit )
+   - exit( code, time )
+ - Command( app, options )
+   - app : Application
+   - options : Object
+   - argData( index )
+   - flagData( flag )
+   - getDefaultString( def )
+   - describe()
+   - before()
+   - fire()
+ - HelpCommand( app ) extends Command
+   - fire()
 
 ## Docs
 

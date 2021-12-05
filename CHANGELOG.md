@@ -2,6 +2,7 @@
 
 ## 2.0.3
  - Cleaned up imports and updated util package.
+ - Updated readme.
 
 ## 2.0.2
  - Readded verbose command input description output.
