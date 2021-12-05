@@ -1,8 +1,8 @@
 /**
  * Requires
  */
-const cfx = require( '@squirrel-forge/node-cfx' ).cfx;
-const callback = require( '@squirrel-forge/node-util' ).callback;
+const { cfx } = require( '@squirrel-forge/node-cfx' );
+const { callback } = require( '@squirrel-forge/node-util' );
 const Command = require( './Command' );
 
 /**

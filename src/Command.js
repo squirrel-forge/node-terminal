@@ -1,10 +1,9 @@
 /**
  * Requires
  */
-const cfx = require( '@squirrel-forge/node-cfx' ).cfx;
-const objm = require( '@squirrel-forge/node-objection' );
-const Exception = require( '@squirrel-forge/node-util' ).Exception;
-const callback = require( '@squirrel-forge/node-util' ).callback;
+const { cfx } = require( '@squirrel-forge/node-cfx' );
+const { cloneObject, mergeObject, isPojo } = require( '@squirrel-forge/node-objection' );
+const { Exception, callback } = require( '@squirrel-forge/node-util' );
 
 /**
  * @typedef {Object} CommandOptions
@@ -63,11 +62,11 @@ class Command {
          * @public
          * @type {CommandOptions}
          */
-        this.options = objm.cloneObject( this._defaults, true );
+        this.options = cloneObject( this._defaults, true );
 
         // Apply custom options
-        if ( objm.isPojo( options ) ) {
-            objm.mergeObject( this.options, options, true, true, true, true );
+        if ( isPojo( options ) ) {
+            mergeObject( this.options, options, true, true, true, true );
         }
 
         // Set known flags as properties

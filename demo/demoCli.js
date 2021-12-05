@@ -1,8 +1,8 @@
 /**
  * Requires
  */
-const cfx = require( '@squirrel-forge/node-cfx' ).cfx;
-const CliInput = require( '@squirrel-forge/node-util' ).CliInput;
+const { cfx } = require( '@squirrel-forge/node-cfx' );
+const { CliInput } = require( '@squirrel-forge/node-util' );
 
 /**
  * Cli application

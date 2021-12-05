@@ -1,15 +1,12 @@
 /**
  * Requires
  */
-const ucfirst = require( 'ucfirst' );
-const objm = require( '@squirrel-forge/node-objection' );
-const cfx = require( '@squirrel-forge/node-cfx' ).cfx;
-const Exception = require( '@squirrel-forge/node-util' ).Exception;
-const CliInput = require( '@squirrel-forge/node-util' ).CliInput;
-const Timer = require( '@squirrel-forge/node-util' ).Timer;
-const Progress = require( '@squirrel-forge/node-util' ).Progress;
-const HelpCommand = require( './HelpCommand' );
 const path = require( 'path' );
+const ucfirst = require( 'ucfirst' );
+const { cfx } = require( '@squirrel-forge/node-cfx' );
+const { cloneObject, mergeObject, isPojo } = require( '@squirrel-forge/node-objection' );
+const { Exception, CliInput, Timer, Progress } = require( '@squirrel-forge/node-util' );
+const HelpCommand = require( './HelpCommand' );
 
 /**
  * @typedef {Object} ApplicationOptions
@@ -68,11 +65,11 @@ class Application {
          * @public
          * @type {ApplicationOptions}
          */
-        this.options = objm.cloneObject( this._defaults, true );
+        this.options = cloneObject( this._defaults, true );
 
         // Apply custom options
-        if ( options && objm.isPojo( options ) ) {
-            objm.mergeObject( this.options, options, true, true, true, true );
+        if ( options && isPojo( options ) ) {
+            mergeObject( this.options, options, true, true, true, true );
         }
 
         /**
